@@ -9,8 +9,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 
-//const bomberoRoute = require("./bomberoRoutes");
-//app.use("/bombero", bomberoRoute);
+const productoRoute = require("./productoRoutes");
+app.use("/producto", productoRoute);
 
 
 // setting error path
