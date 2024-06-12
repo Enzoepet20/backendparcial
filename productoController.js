@@ -37,7 +37,6 @@ controller.getID = async function (req, res) {
 controller.createNewProducto = async function (req, res) {
     try {
         console.log(req.body);
-        if (!req.body.nombre || !req.body.precio || !req.body.cantidad || !req.body.categoria) {
             const newProducto = await model.Producto.create({
                 nombre: req.body.nombre,
                 precio: req.body.precio,
@@ -48,14 +47,13 @@ controller.createNewProducto = async function (req, res) {
             res.status(201).json({
                 message: "Producto successfully created",
                 data: {
-                    id: newProducto.nrodoc,
+                    id: newProducto.id,
                     nombre: newProducto.nombre,
                     precio: newProducto.precio,
                     cantidad: newProducto.cantidad,
                     categoria: newProducto.categoria,
                 },
             });
-        }
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -96,19 +94,62 @@ controller.editAt = async function (req, res) {
 
 controller.deleteProducto = async function (req, res) {
     try {
-        await model.Producto
-            .findAll({ where: { id: req.body.id } })
-            .then(async (result) => {
+        const productoId = req.params.id;
+
+        const result = await model.Producto.findAll({ where: { id: productoId } });
+
         if (result.length > 0) {
-            await model.Producto.destroy({ where: { id: req.body.id } });
-            res.status(200).json({ message: "delete producto successfully" });
+            await model.Producto.destroy({ where: { id: productoId } });
+            res.status(200).json({ message: "Producto deleted successfully" });
         } else {
-            res.status(404).json({ message: "id user not found" });
-            }
-        });
+            res.status(404).json({ message: "Producto ID not found" });
+        }
     } catch (error) {
-        res.status(404).json({ message: error });
+        res.status(500).json({ message: error.message });
     }
 };
+
+controller.getProductosOrdenados = async function (req, res) {
+    try {
+        const { criterio = 'nombre' } = req.query;
+        const validarCriterios = ['nombre', 'precio', 'cantidad'];
+        if (!validarCriterios.includes(criterio)) {
+            return res.status(400).json({ message: "Criterio de ordenación no válido. Los criterios válidos son: nombre, precio, cantidad." });
+        }
+        const productos = await model.Producto.findAll({
+            order: [[criterio, 'ASC']]
+        });
+
+        res.status(200).json({ productos });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+controller.getProductosFiltrados = async function (req, res) {
+    try {
+        const { precioMin, precioMax, categoria } = req.query;
+
+        const condiciones = {};
+        if (precioMin) {
+            condiciones.precio = { ...condiciones.precio, [Op.gte]: parseFloat(precioMin) };
+        }
+        if (precioMax) {
+            condiciones.precio = { ...condiciones.precio, [Op.lte]: parseFloat(precioMax) };
+        }
+        if (categoria) {
+            condiciones.categoria = categoria;
+        }
+        const productos = await model.Producto.findAll({
+            where: condiciones
+        });
+
+        res.status(200).json({ productos });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 
 module.exports = controller;

@@ -6,7 +6,7 @@ const model = {};
 
 
 
-db.sync({ force: true })
+db.sync({ force: false })
   .then(() => {
     console.log('Tablas creadas correctamente.');
   })
